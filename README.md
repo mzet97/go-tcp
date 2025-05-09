@@ -1,28 +1,20 @@
-Para gerar um README para o seu projeto, é importante incluir informações essenciais que ajudem outras pessoas a entenderem e utilizarem seu repositório. Aqui está um template básico para o README do seu projeto "go-tcp":
-
----
-
 # go-tcp
 
-**go-tcp** é um projeto escrito em Go (Golang) que implementa funcionalidades relacionadas a conexões TCP. Este repositório foi projetado para [descreva o objetivo do projeto, por exemplo: facilitar a comunicação TCP, demonstrar conceitos de redes, etc.].
+**go-tcp** é um cliente de benchmark em Go para medir a latência de ida e volta (RTT) em conexões TCP. Ele envia payloads de tamanhos em potências de 2 (de 2 bytes até 1 GiB) a um servidor de echo TCP e calcula o tempo de resposta com alta precisão.
 
 ## Recursos
 
-- [Liste os principais recursos do seu projeto]
-- Conexão TCP simples
-- Manipulação de dados enviados/recebidos
-- [Outros recursos importantes]
+* Conexão TCP simples e configurável (IP e porta via prompt)
+* Envio de payloads cujo tamanho dobra a cada iteração (2, 4, 8 … até 1 GiB)
+* Medição de RTT em nanosegundos convertida para segundos
+* Formatação de resultados com precisão de 6 casas decimais
+* Exibição clara de tempo de resposta para cada tamanho de payload
 
 ## Pré-requisitos
 
-Antes de começar, certifique-se de ter os seguintes requisitos instalados:
-
-- [Go](https://go.dev/) versão X.X ou superior
-- [Outros pré-requisitos, se necessário]
+* Go 1.21 ou superior instalado ([Download](https://go.dev/dl/))
 
 ## Instalação
-
-Siga estas etapas para configurar o projeto localmente:
 
 1. Clone este repositório:
 
@@ -30,41 +22,71 @@ Siga estas etapas para configurar o projeto localmente:
    git clone https://github.com/mzet97/go-tcp.git
    cd go-tcp
    ```
-
-2. Compile o projeto:
-
-   ```bash
-   go build
-   ```
-
-3. Execute o programa:
+2. Baixe as dependências:
 
    ```bash
-   ./go-tcp
+   go mod tidy
    ```
+3. Compile o cliente:
+
+   ```bash
+   go build -o bin/go-tcp
+   ```
+
+> **Observação:** Ajuste o nome do output ou diretório `bin/` conforme sua preferência.
 
 ## Uso
 
-[Explique como utilizar o projeto. Adicione exemplos de comandos, parâmetros ou configurações.]
+1. Execute o cliente:
 
-Exemplo de execução:
+   ```bash
+   ./bin/go-tcp
+   ```
+2. Informe o **IP** e a **porta** do servidor TCP de echo quando solicitado:
 
-```bash
-./go-tcp -parametro exemplo
+   ```text
+   Digite o IP do servidor: 127.0.0.1
+   Digite a porta do servidor: 9000
+   ```
+3. O cliente fará automaticamente envios de payloads de 2, 4, 8 … bytes até 1 GiB e exibirá:
+
+   ```text
+   Tamanho:         2 bytes → Tempo de resposta: 0.000523 s
+   Tamanho:         4 bytes → Tempo de resposta: 0.000612 s
+   …
+   Tamanho: 1073741824 bytes → Tempo de resposta: 8.593567 s
+   ```
+
+## Exemplo de servidor de echo
+
+Para melhores resultados de benchmark, utilize um servidor que simplesmente retorne os mesmos bytes recebidos. Um exemplo em Go:
+
+```go
+listener, _ := net.Listen("tcp", ":9000")
+for {
+    conn, _ := listener.Accept()
+    go func(c net.Conn) {
+        defer c.Close()
+        buf := make([]byte, 64*1024)
+        for {
+            n, err := c.Read(buf)
+            if err != nil { break }
+            c.Write(buf[:n])
+        }
+    }(conn)
+}
 ```
 
 ## Contribuição
 
-Contribuições são sempre bem-vindas! Para contribuir, siga estas etapas:
+Contribuições são bem-vindas! Siga estes passos:
 
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/fooBar`)
-3. Faça commit das suas alterações (`git commit -m 'Add some fooBar'`)
-4. Faça push para a branch (`git push origin feature/fooBar`)
+1. Fork este repositório
+2. Crie uma branch para sua feature (`git checkout -b feature/nome-da-feature`)
+3. Faça commit das suas alterações (`git commit -m "Add nova feature"`)
+4. Faça push para a branch (`git push origin feature/nome-da-feature`)
 5. Abra um Pull Request
 
 ## Licença
 
-Este projeto está licenciado sob a licença [sua licença aqui]. Veja o arquivo [LICENSE](./LICENSE) para mais detalhes.
-
-Se precisar de algo mais específico ou quiser adicionar detalhes técnicos do seu projeto, posso ajudar a expandir este modelo.
+Este projeto está licenciado sob a [MIT License](./LICENSE). Veja o arquivo LICENSE para mais detalhes.
